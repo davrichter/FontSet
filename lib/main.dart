@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'dart:developer' as developer;
 
 void main() {
   runApp(const MyApp());
@@ -53,7 +54,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  late Future<Response> fonts;
+  Future<Response>? fonts;
 
   void _incrementCounter() {
     setState(() {
@@ -68,13 +69,8 @@ class _MyHomePageState extends State<MyHomePage> {
     @override
     void initState() {
       super.initState();
-      fonts = fetchFontList();
     }
   }
-
-Future<http.Response> fetchFontList() {
-  return http.get(Uri.parse('https://fonts.google.com/metadata/fonts'));
-}
 
   @override
   Widget build(BuildContext context) {
@@ -109,8 +105,20 @@ Future<http.Response> fetchFontList() {
           // axis because Columns are vertical (the cross axis would be
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            FutureBuilder<Response>(builder: builder)
+          children: [
+            const Text(
+              'You have pushed the button this many times:',
+            ),
+            FutureBuilder<Response>(future: fonts, builder: ((context, snapshot) {
+              if (snapshot.hasData) {
+                developer.log(snapshot.data!.body);
+                print("hi");
+                return Text(snapshot.data!.body);
+              } else if (snapshot.hasError) {
+                return Text("${snapshot.error}");
+              }
+              return CircularProgressIndicator();
+            }))
           ],
         ),
       ),
