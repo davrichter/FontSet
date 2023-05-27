@@ -1,9 +1,27 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'dart:developer' as developer;
+import 'dart:convert';
+
+import 'api.dart';
+
+Future<Fonts> fetchFonts() async {
+  final response = await http
+      .get(Uri.parse('https://www.googleapis.com/webfonts/v1/webfonts?key=AIzaSyC4-RJRczfKwo-7fMFdOoRBpIDKxDBlNns'));
+
+  if (response.statusCode == 200) {
+    // If the server did return a 200 OK response,
+    // then parse the JSON.
+    final fonts = Fonts.fromJson(jsonDecode(response.body));
+    developer.log(fonts.items[0].lastModified.year.toString(), name: 'my.app.category');
+    return fonts;
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Failed to load album');
+  }
+}
 
 void main() {
   runApp(const MyApp());
@@ -53,24 +71,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   Future<Response>? fonts;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-
-    @override
-    void initState() {
-      super.initState();
-    }
+  @override
+  void initState() {
+    super.initState();
+    fetchFonts();
+    developer.log("Hello");
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -122,11 +131,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
