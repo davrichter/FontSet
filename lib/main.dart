@@ -71,12 +71,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Future<Response>? fonts;
+  Future<Fonts>? fonts;
 
   @override
   void initState() {
     super.initState();
-    fetchFonts();
+    fonts = fetchFonts();
     developer.log("Hello");
   }
 
@@ -115,21 +115,49 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            FutureBuilder<Response>(future: fonts, builder: ((context, snapshot) {
-              if (snapshot.hasData) {
-                developer.log(snapshot.data!.body);
-                print("hi");
-                return Text(snapshot.data!.body);
-              } else if (snapshot.hasError) {
-                return Text("${snapshot.error}");
-              }
-              return CircularProgressIndicator();
-            }))
+            Expanded(
+              child: (
+                Padding(
+                  padding: const EdgeInsets.only(top: 10,bottom: 10,left: 10,right: 10),
+                  child: FutureBuilder<Fonts>(
+                  future: fonts, 
+                  builder: ((context, snapshot) {
+                  if (snapshot.hasData) {
+                    return GridView.count(
+                      primary: false,
+                      padding: const EdgeInsets.all(20),
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      crossAxisCount: 3,
+                      children: snapshot.data!.items.map((font) => FontCard(font: font)).toList()
+                    );
+                  } 
+                  return const CircularProgressIndicator();
+                })),
+                )
+              ),
+            )
           ],
         ),
+      ),
+    );
+  }
+}
+
+class FontCard extends StatelessWidget {
+  const FontCard({Key? key, required this.font}) : super(key: key);
+
+  final Item font;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        children: [
+          Text(font.family),
+          Text(font.category),
+          Text(font.lastModified.year.toString()),
+        ],
       ),
     );
   }
