@@ -101,11 +101,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   extended: constraints.maxWidth >= 600,
                   destinations: [
                     NavigationRailDestination(
-                      icon: Icon(Icons.home),
+                      icon: const Icon(Icons.home),
                       label: Text('Home', style: theme.textTheme.bodyMedium),
                     ),
                     NavigationRailDestination(
-                      icon: Icon(Icons.settings),
+                      icon: const Icon(Icons.settings),
                       label: Text('Settings', style: theme.textTheme.bodyMedium),
                     ),
                   ],
@@ -134,6 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
 class FontPage extends StatelessWidget {
   Future<Fonts>? fonts = fetchFonts();
 
+  @override
   Widget build(BuildContext context) {
     return Column(
     mainAxisAlignment: MainAxisAlignment.center,
@@ -175,39 +176,40 @@ class SettingsPage extends StatelessWidget {
     return ListView(
       children: [
         Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Settings',
+                style: theme.textTheme.displayMedium,
+              ),
+              const Divider(
+                color: Colors.black,
+              ),
+              Row(children: [
                 Text(
-                  'Settings',
-                  style: theme.textTheme.displayLarge,
+                  'Dark Mode',
+                  style: theme.textTheme.bodyMedium,
                 ),
-                Divider(
-                  color: Colors.black,
-                ),
-                Row(children: [
-                  Text(
-                    'Dark Mode',
+                const Spacer(),
+                ElevatedButton(
+                  onPressed: () {
+                    if (appState.appTheme == Brightness.light) {
+                      appState.setTheme(Brightness.dark);
+                    } else {
+                      appState.setTheme(Brightness.light);
+                    }
+                  },
+                  child: Text(
+                    'Switch',
                     style: theme.textTheme.bodyMedium,
                   ),
-                  Spacer(),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (appState.appTheme == Brightness.light) {
-                        appState.setTheme(Brightness.dark);
-                      } else {
-                        appState.setTheme(Brightness.light);
-                      }
-                    },
-                    child: Text(
-                      'Switch',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ),
-                ]),
-              ],
-            ))
+                ),
+              ]),
+            ],
+          )
+        )
       ],
     );
   }
@@ -221,12 +223,31 @@ class FontCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Column(
-        children: [
-          Text(font.family),
-          Text(font.category),
-          Text(font.lastModified.year.toString()),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(font.family),
+                  Text(font.category),
+                ], 
+              ),
+            ),
+      
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text("${font.variants.length.toString()} variants"),
+                ], 
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
