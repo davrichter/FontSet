@@ -141,7 +141,7 @@ class FontPage extends StatelessWidget {
       Expanded(
         child: (
           Padding(
-            padding: const EdgeInsets.only(top: 10,bottom: 10,left: 10,right: 10),
+            padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
             child: FutureBuilder<Fonts>(
             future: fonts, 
             builder: ((context, snapshot) {
