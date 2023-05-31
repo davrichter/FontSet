@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as developer;
 import 'dart:convert';
- import 'package:provider/provider.dart'; 
+import 'package:provider/provider.dart'; 
+
+import 'package:dotenv/dotenv.dart';
 
 import 'api.dart';
 
 Future<Fonts> fetchFonts() async {
+  var env = DotEnv(includePlatformEnvironment: false)
+    ..load([".env"]);
+  var googleFontsKey = env['GOOGLE_FONTS_KEY'];
   final response = await http
-      .get(Uri.parse('https://www.googleapis.com/webfonts/v1/webfonts?key=AIzaSyC4-RJRczfKwo-7fMFdOoRBpIDKxDBlNns'));
+      .get(Uri.parse('https://www.googleapis.com/webfonts/v1/webfonts?key=$googleFontsKey'));
 
   if (response.statusCode == 200) {
     // If the server did return a 200 OK response,
