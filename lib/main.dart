@@ -8,25 +8,6 @@ import 'package:dotenv/dotenv.dart';
 
 import 'api.dart';
 
-Future<Fonts> fetchFonts() async {
-  var env = DotEnv(includePlatformEnvironment: false)
-    ..load([".env"]);
-  var googleFontsKey = env['GOOGLE_FONTS_KEY'];
-  final response = await http
-      .get(Uri.parse('https://www.googleapis.com/webfonts/v1/webfonts?key=$googleFontsKey'));
-
-  if (response.statusCode == 200) {
-    // If the server did return a 200 OK response,
-    // then parse the JSON.
-    final fonts = Fonts.fromJson(jsonDecode(response.body));
-    developer.log(fonts.items[0].lastModified.year.toString(), name: 'my.app.category');
-    return fonts;
-  } else {
-    // If the server did not return a 200 OK response,
-    // then throw an exception.
-    throw Exception('Failed to load album');
-  }
-}
 
 void main() {
   runApp(const MyApp());
@@ -58,11 +39,48 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var appTheme = Brightness.light;
+  List<Item> filteredFonts = [];
+  List<Item> unfilteredFonts = [];
 
   void setTheme(Brightness brightness) {
     appTheme = brightness;
 
     notifyListeners();
+  }
+
+  void setFilteredFonts(List<Item> fonts) {
+    filteredFonts = fonts;
+
+    notifyListeners();
+  }
+
+  void setFonts(List<Item> fonts) {
+    unfilteredFonts = fonts;
+
+    notifyListeners();
+  }
+}
+
+
+Future<Fonts> fetchFonts() async {
+  var env = DotEnv(includePlatformEnvironment: false)
+    ..load([".env"]);
+  var googleFontsKey = env['GOOGLE_FONTS_KEY'];
+  final response = await http
+      .get(Uri.parse('https://www.googleapis.com/webfonts/v1/webfonts?key=$googleFontsKey'));
+
+  if (response.statusCode == 200) {
+    // If the server did return a 200 OK response,
+    // then parse the JSON.
+    final fonts = Fonts.fromJson(jsonDecode(response.body));
+    developer.log(fonts.items[0].lastModified.year.toString(), name: 'my.app.category');
+    developer.log(fonts.toString());
+    
+    return fonts;
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Failed to load album');
   }
 }
 
@@ -135,40 +153,89 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class FontPage extends StatelessWidget {
-  Future<Fonts>? fonts = fetchFonts();
+class FontPage extends StatefulWidget {  
+  @override
+  State<FontPage> createState() => _FontPageState();
+}
+
+class _FontPageState extends State<FontPage>  {
+  TextEditingController textController = TextEditingController();
+  String displayText = "";
+  Fonts? fonts;
+  
+  @override
+  void initState() {
+    var appState = Provider.of<MyAppState>(context, listen: false);
+
+    fetchFonts().then((value) => {
+      developer.log("Fonts44: ${value.items.length}"),
+      appState.setFonts(value.items),
+      developer.log("Fonts66: ${appState.unfilteredFonts.length}"),
+      appState.setFilteredFonts(value.items),
+      developer.log("Hello"),
+    });
+
+    super.initState();
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    
+
     return Column(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
+      Padding(
+        padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
+        child: TextField(
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Enter a search term',
+          ),
+          onChanged: (value) async => {
+            appState.setFilteredFonts(fontFilter(value, appState.unfilteredFonts)),
+            developer.log("${appState.filteredFonts.length}")
+          },
+        ),
+      ),
       Expanded(
         child: (
           Padding(
             padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
-            child: FutureBuilder<Fonts>(
-            future: fonts, 
-            builder: ((context, snapshot) {
-            if (snapshot.hasData) {
-              return GridView.count(
-                primary: false,
-                padding: const EdgeInsets.all(20),
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                crossAxisCount: 3,
-                children: snapshot.data!.items.map((font) => FontCard(font: font)).toList()
-              );
-            } 
-            return const CircularProgressIndicator();
-          })),
+            child: 
+                GridView.count(
+                  primary: false,
+                  padding: const EdgeInsets.all(20),
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  crossAxisCount: 3,
+                  children: appState.filteredFonts.map((font) => FontCard(font: font)).toList()
+                )
           )
         ),
       )
     ],
   );
   }
+}
 
+List<Item> fontFilter(String enteredKeyword, List<Item> fonts) {
+  developer.log(enteredKeyword);
+  if (enteredKeyword.isEmpty) {
+    // if the search field is empty or only contains white-space, we'll display all users
+    developer.log("Fonts: ${fonts.length}");
+    return fonts;
+  } else {
+    developer.log("Fonts22: ${fonts.length}");
+    final results = fonts
+        .where((font) =>
+            font.family.toLowerCase().contains(enteredKeyword.toLowerCase()))
+        .toList();
+    return results;
+    // we use the toLowerCase() method to make it case-insensitive
+  }
 }
 
 class SettingsPage extends StatelessWidget {
