@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:provider/provider.dart'; 
 
+import 'package:google_fonts/google_fonts.dart';
 import 'package:dotenv/dotenv.dart';
 
 import 'api.dart';
@@ -41,6 +42,7 @@ class MyAppState extends ChangeNotifier {
   var appTheme = Brightness.light;
   List<Item> filteredFonts = [];
   List<Item> unfilteredFonts = [];
+  String fontPreviewText = 'The quick brown fox jumps over the lazy dog';
 
   void setTheme(Brightness brightness) {
     appTheme = brightness;
@@ -56,6 +58,12 @@ class MyAppState extends ChangeNotifier {
 
   void setFonts(List<Item> fonts) {
     unfilteredFonts = fonts;
+
+    notifyListeners();
+  }
+
+  void setFontPreviewText(String text) {
+    fontPreviewText = text;
 
     notifyListeners();
   }
@@ -184,14 +192,30 @@ class _FontPageState extends State<FontPage>  {
     children: [
       Padding(
         padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
-        child: TextField(
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: 'Enter a search term',
-          ),
-          onChanged: (value) async => {
-            appState.setFilteredFonts(fontFilter(value, appState.unfilteredFonts)),
-          },
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Enter a search term',
+                ),
+                onChanged: (value) async => {
+                  appState.setFilteredFonts(fontFilter(value, appState.unfilteredFonts)),
+                },
+              ),
+            ),
+            TextField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'The quick brown fox jumps over the lazy dog',
+              ),
+              onChanged: (value) async => {
+                appState.setFontPreviewText(value),
+              },
+            ),
+          ],
         ),
       ),
       Expanded(
@@ -284,33 +308,51 @@ class FontCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
+        child: Column(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(font.family),
-                  Text(font.category),
-                ], 
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(font.family),
+                      Text(font.category),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text("${font.variants.length.toString()} variants"),
+                    ],
+                  ),
+                ),
+              ],
             ),
-      
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text("${font.variants.length.toString()} variants"),
-                ], 
-              ),
-            )
+            Column(
+              children: [
+                _buildFontText(appState),
+              ],
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildFontText(MyAppState appState) {
+    try {
+      return Text(appState.fontPreviewText, style: GoogleFonts.getFont(font.family, fontSize: 20));
+    } catch (e) {
+      return const Text("Error loading font");
+    }
   }
 }
