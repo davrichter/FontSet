@@ -73,8 +73,6 @@ Future<Fonts> fetchFonts() async {
     // If the server did return a 200 OK response,
     // then parse the JSON.
     final fonts = Fonts.fromJson(jsonDecode(response.body));
-    developer.log(fonts.items[0].lastModified.year.toString(), name: 'my.app.category');
-    developer.log(fonts.toString());
     
     return fonts;
   } else {
@@ -168,11 +166,8 @@ class _FontPageState extends State<FontPage>  {
     var appState = Provider.of<MyAppState>(context, listen: false);
 
     fetchFonts().then((value) => {
-      developer.log("Fonts44: ${value.items.length}"),
       appState.setFonts(value.items),
-      developer.log("Fonts66: ${appState.unfilteredFonts.length}"),
       appState.setFilteredFonts(value.items),
-      developer.log("Hello"),
     });
 
     super.initState();
@@ -196,7 +191,6 @@ class _FontPageState extends State<FontPage>  {
           ),
           onChanged: (value) async => {
             appState.setFilteredFonts(fontFilter(value, appState.unfilteredFonts)),
-            developer.log("${appState.filteredFonts.length}")
           },
         ),
       ),
@@ -222,13 +216,10 @@ class _FontPageState extends State<FontPage>  {
 }
 
 List<Item> fontFilter(String enteredKeyword, List<Item> fonts) {
-  developer.log(enteredKeyword);
   if (enteredKeyword.isEmpty) {
-    // if the search field is empty or only contains white-space, we'll display all users
-    developer.log("Fonts: ${fonts.length}");
+    // if the search field is empty or only contains white-space, we'll display all fonts
     return fonts;
   } else {
-    developer.log("Fonts22: ${fonts.length}");
     final results = fonts
         .where((font) =>
             font.family.toLowerCase().contains(enteredKeyword.toLowerCase()))
