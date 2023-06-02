@@ -25,7 +25,7 @@ void sendNotification(String message) {
     WinToast.instance().showCustomToast(xml: xml);
   }
 
-  if (Platform.isLinux) {
+  if (Platform.isLinux || Platform.isMacOS) {
     final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         FlutterLocalNotificationsPlugin();
 
