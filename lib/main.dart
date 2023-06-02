@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as developer;
 import 'dart:convert';
-import 'package:provider/provider.dart'; 
+import 'package:provider/provider.dart';
+import 'dart:async';
+import 'package:flutter/services.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotenv/dotenv.dart';
 
 import 'api.dart';
-
+import 'font_installer.dart';
+import 'notification_sender.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,9 +24,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<MyAppState>(
-      create: (_) => MyAppState(),
-
-      builder: (context, child) {
+        create: (_) => MyAppState(),
+        builder: (context, child) {
           // No longer throws
           return MaterialApp(
             title: 'Namer App',
@@ -33,8 +35,7 @@ class MyApp extends StatelessWidget {
             ),
             home: MyHomePage(),
           );
-        }
-    );
+        });
   }
 }
 
@@ -69,19 +70,17 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
-
 Future<Fonts> fetchFonts() async {
-  var env = DotEnv(includePlatformEnvironment: false)
-    ..load([".env"]);
+  var env = DotEnv(includePlatformEnvironment: false)..load([".env"]);
   var googleFontsKey = env['GOOGLE_FONTS_KEY'];
-  final response = await http
-      .get(Uri.parse('https://www.googleapis.com/webfonts/v1/webfonts?key=$googleFontsKey'));
+  final response = await http.get(Uri.parse(
+      'https://www.googleapis.com/webfonts/v1/webfonts?key=$googleFontsKey'));
 
   if (response.statusCode == 200) {
     // If the server did return a 200 OK response,
     // then parse the JSON.
     final fonts = Fonts.fromJson(jsonDecode(response.body));
-    
+
     return fonts;
   } else {
     // If the server did not return a 200 OK response,
@@ -119,123 +118,115 @@ class _MyHomePageState extends State<MyHomePage> {
 
     var theme = Theme.of(context);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Scaffold(
-          body: Row(
-            children: [
-              SafeArea(
-                child: NavigationRail(
-                  extended: constraints.maxWidth >= 600,
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.home),
-                      label: Text('Home', style: theme.textTheme.bodyMedium),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.settings),
-                      label: Text('Settings', style: theme.textTheme.bodyMedium),
-                    ),
-                  ],
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      selectedIndex = value;
-                    });
-                  },
+    return LayoutBuilder(builder: (context, constraints) {
+      return Scaffold(
+        body: Row(children: [
+          SafeArea(
+            child: NavigationRail(
+              extended: constraints.maxWidth >= 600,
+              destinations: [
+                NavigationRailDestination(
+                  icon: const Icon(Icons.home),
+                  label: Text('Home', style: theme.textTheme.bodyMedium),
                 ),
-              ),
-              Expanded(
-                child: Container(
-                  color: theme.colorScheme.primaryContainer,
-                  child: page,
-                ), 
+                NavigationRailDestination(
+                  icon: const Icon(Icons.settings),
+                  label: Text('Settings', style: theme.textTheme.bodyMedium),
+                ),
+              ],
+              selectedIndex: selectedIndex,
+              onDestinationSelected: (value) {
+                setState(() {
+                  selectedIndex = value;
+                });
+              },
             ),
-            ]
           ),
-        );
-      }
-    );
+          Expanded(
+            child: Container(
+              color: theme.colorScheme.primaryContainer,
+              child: page,
+            ),
+          ),
+        ]),
+      );
+    });
   }
 }
 
-class FontPage extends StatefulWidget {  
+class FontPage extends StatefulWidget {
   @override
   State<FontPage> createState() => _FontPageState();
 }
 
-class _FontPageState extends State<FontPage>  {
+class _FontPageState extends State<FontPage> {
   TextEditingController textController = TextEditingController();
   String displayText = "";
   Fonts? fonts;
-  
+
   @override
   void initState() {
     var appState = Provider.of<MyAppState>(context, listen: false);
 
     fetchFonts().then((value) => {
-      appState.setFonts(value.items),
-      appState.setFilteredFonts(value.items),
-    });
+          appState.setFonts(value.items),
+          appState.setFilteredFonts(value.items),
+        });
 
     super.initState();
   }
 
-
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    
 
     return Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: TextField(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: TextField(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Enter a search term',
+                  ),
+                  onChanged: (value) async => {
+                    appState.setFilteredFonts(
+                        fontFilter(value, appState.unfilteredFonts)),
+                  },
+                ),
+              ),
+              TextField(
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'Enter a search term',
+                  hintText: 'The quick brown fox jumps over the lazy dog',
                 ),
                 onChanged: (value) async => {
-                  appState.setFilteredFonts(fontFilter(value, appState.unfilteredFonts)),
+                  appState.setFontPreviewText(value),
                 },
               ),
-            ),
-            TextField(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'The quick brown fox jumps over the lazy dog',
-              ),
-              onChanged: (value) async => {
-                appState.setFontPreviewText(value),
-              },
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-      Expanded(
-        child: (
-          Padding(
-            padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
-            child: 
-                GridView.count(
+        Expanded(
+          child: (Padding(
+              padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
+              child: GridView.count(
                   primary: false,
                   padding: const EdgeInsets.all(20),
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                   crossAxisCount: 3,
-                  children: appState.filteredFonts.map((font) => FontCard(font: font)).toList()
-                )
-          )
-        ),
-      )
-    ],
-  );
+                  children: appState.filteredFonts
+                      .map((font) => FontCard(font: font))
+                      .toList()))),
+        )
+      ],
+    );
   }
 }
 
@@ -262,40 +253,39 @@ class SettingsPage extends StatelessWidget {
     return ListView(
       children: [
         Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Settings',
-                style: theme.textTheme.displayMedium,
-              ),
-              const Divider(
-                color: Colors.black,
-              ),
-              Row(children: [
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  'Dark Mode',
-                  style: theme.textTheme.bodyMedium,
+                  'Settings',
+                  style: theme.textTheme.displayMedium,
                 ),
-                const Spacer(),
-                ElevatedButton(
-                  onPressed: () {
-                    if (appState.appTheme == Brightness.light) {
-                      appState.setTheme(Brightness.dark);
-                    } else {
-                      appState.setTheme(Brightness.light);
-                    }
-                  },
-                  child: Text(
-                    'Switch',
+                const Divider(
+                  color: Colors.black,
+                ),
+                Row(children: [
+                  Text(
+                    'Dark Mode',
                     style: theme.textTheme.bodyMedium,
                   ),
-                ),
-              ]),
-            ],
-          )
-        )
+                  const Spacer(),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (appState.appTheme == Brightness.light) {
+                        appState.setTheme(Brightness.dark);
+                      } else {
+                        appState.setTheme(Brightness.light);
+                      }
+                    },
+                    child: Text(
+                      'Switch',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ]),
+              ],
+            ))
       ],
     );
   }
@@ -339,7 +329,19 @@ class FontCard extends StatelessWidget {
             ),
             Column(
               children: [
-                _buildFontText(appState),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, bottom: 10),
+                  child: _buildFontText(appState),
+                ),
+                ElevatedButton(
+                  style: const ButtonStyle(),
+                  onPressed: () {
+                    installFonts(font.files, font.family);
+                    developer.log("${font.family} has been installed");
+                    sendNotification("${font.family} has been installed");
+                  },
+                  child: const Text('Install'),
+                ),
               ],
             ),
           ],
@@ -350,7 +352,8 @@ class FontCard extends StatelessWidget {
 
   Widget _buildFontText(MyAppState appState) {
     try {
-      return Text(appState.fontPreviewText, style: GoogleFonts.getFont(font.family, fontSize: 20));
+      return Text(appState.fontPreviewText,
+          style: GoogleFonts.getFont(font.family, fontSize: 20));
     } catch (e) {
       return const Text("Error loading font");
     }
