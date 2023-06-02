@@ -31,7 +31,9 @@ class MyApp extends StatelessWidget {
             title: 'Namer App',
             theme: ThemeData(
               useMaterial3: true,
-              brightness: context.watch<MyAppState>().appTheme,
+              brightness: context
+                  .watch<MyAppState>()
+                  .appTheme,
             ),
             home: MyHomePage(),
           );
@@ -71,7 +73,8 @@ class MyAppState extends ChangeNotifier {
 }
 
 Future<Fonts> fetchFonts() async {
-  var env = DotEnv(includePlatformEnvironment: false)..load([".env"]);
+  var env = DotEnv(includePlatformEnvironment: false)
+    ..load([".env"]);
   var googleFontsKey = env['GOOGLE_FONTS_KEY'];
   final response = await http.get(Uri.parse(
       'https://www.googleapis.com/webfonts/v1/webfonts?key=$googleFontsKey'));
@@ -168,10 +171,11 @@ class _FontPageState extends State<FontPage> {
   void initState() {
     var appState = Provider.of<MyAppState>(context, listen: false);
 
-    fetchFonts().then((value) => {
-          appState.setFonts(value.items),
-          appState.setFilteredFonts(value.items),
-        });
+    fetchFonts().then((value) =>
+    {
+      appState.setFonts(value.items),
+      appState.setFilteredFonts(value.items),
+    });
 
     super.initState();
   }
@@ -194,7 +198,8 @@ class _FontPageState extends State<FontPage> {
                     border: OutlineInputBorder(),
                     hintText: 'Enter a search term',
                   ),
-                  onChanged: (value) async => {
+                  onChanged: (value) async =>
+                  {
                     appState.setFilteredFonts(
                         fontFilter(value, appState.unfilteredFonts)),
                   },
@@ -205,7 +210,8 @@ class _FontPageState extends State<FontPage> {
                   border: OutlineInputBorder(),
                   hintText: 'The quick brown fox jumps over the lazy dog',
                 ),
-                onChanged: (value) async => {
+                onChanged: (value) async =>
+                {
                   appState.setFontPreviewText(value),
                 },
               ),
@@ -237,7 +243,7 @@ List<Item> fontFilter(String enteredKeyword, List<Item> fonts) {
   } else {
     final results = fonts
         .where((font) =>
-            font.family.toLowerCase().contains(enteredKeyword.toLowerCase()))
+        font.family.toLowerCase().contains(enteredKeyword.toLowerCase()))
         .toList();
     return results;
     // we use the toLowerCase() method to make it case-insensitive
@@ -331,7 +337,16 @@ class FontCard extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(top: 10, bottom: 10),
-                  child: _buildFontText(appState),
+                  child: FutureBuilder<Widget>(
+                      future: _buildFontText(appState),
+                      builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+                        if (snapshot.hasData) {
+                          return snapshot.data!;
+                        } else {
+                          return CircularProgressIndicator();
+                        }
+                      }
+                  ),
                 ),
                 ElevatedButton(
                   style: const ButtonStyle(),
@@ -350,7 +365,7 @@ class FontCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFontText(MyAppState appState) {
+  Future<Widget> _buildFontText(MyAppState appState) async {
     try {
       return Text(appState.fontPreviewText,
           style: GoogleFonts.getFont(font.family, fontSize: 20));
