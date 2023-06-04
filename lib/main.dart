@@ -4,7 +4,6 @@ import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'dart:async';
-import 'package:flutter/services.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotenv/dotenv.dart';
@@ -28,14 +27,13 @@ class MyApp extends StatelessWidget {
         builder: (context, child) {
           // No longer throws
           return MaterialApp(
-            title: 'Namer App',
             theme: ThemeData(
               useMaterial3: true,
               brightness: context
                   .watch<MyAppState>()
                   .appTheme,
             ),
-            home: MyHomePage(),
+            home: const MyHomePage(),
           );
         });
   }
@@ -93,6 +91,8 @@ Future<Fonts> fetchFonts() async {
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -110,10 +110,10 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = FontPage();
+        page = const FontPage();
         break;
       case 1:
-        page = SettingsPage();
+        page = const SettingsPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -158,6 +158,8 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class FontPage extends StatefulWidget {
+  const FontPage({super.key});
+
   @override
   State<FontPage> createState() => _FontPageState();
 }
@@ -251,6 +253,8 @@ List<Item> fontFilter(String enteredKeyword, List<Item> fonts) {
 }
 
 class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -343,7 +347,7 @@ class FontCard extends StatelessWidget {
                         if (snapshot.hasData) {
                           return snapshot.data!;
                         } else {
-                          return CircularProgressIndicator();
+                          return const CircularProgressIndicator();
                         }
                       }
                   ),
