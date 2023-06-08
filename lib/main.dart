@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 
 import 'package:google_fonts/google_fonts.dart';
-import 'package:dotenv/dotenv.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'api.dart';
 import 'font_installer.dart';
@@ -71,9 +71,8 @@ class MyAppState extends ChangeNotifier {
 }
 
 Future<Fonts> fetchFonts() async {
-  var env = DotEnv(includePlatformEnvironment: false)
-    ..load([".env"]);
-  var googleFontsKey = env['GOOGLE_FONTS_KEY'];
+  await dotenv.load(fileName: "assets/.env");
+  var googleFontsKey = dotenv.env['GOOGLE_FONTS_KEY'];
   final response = await http.get(Uri.parse(
       'https://www.googleapis.com/webfonts/v1/webfonts?key=$googleFontsKey'));
 

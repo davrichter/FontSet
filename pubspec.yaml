@@ -32,8 +32,8 @@ dependencies:
     sdk: flutter
   http: ^1.0.0
   json_serializable: ^6.6.2
-  provider: ^5.0.0 
-  dotenv: ^4.1.0
+  provider: ^5.0.0
+  flutter_dotenv: ^5.1.0
   google_fonts: ^5.0.0
   win_toast: ^0.3.0
   flutter_local_notifications: ^14.1.1
@@ -65,8 +65,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-assets:
-  - .env
+  assets:
+    - assets/.env
 
   # To add assets to your application, add an assets section, like this:
   # assets:
