@@ -294,7 +294,8 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ]),
               ],
-            ))
+            )
+        )
       ],
     );
   }
@@ -353,8 +354,8 @@ class FontCard extends StatelessWidget {
                 ),
                 ElevatedButton(
                   style: const ButtonStyle(),
-                  onPressed: () {
-                    installFonts(font.files, font.family);
+                  onPressed: () async {
+                    await installFonts(font.files, font.family);
                     developer.log("${font.family} has been installed");
                     sendNotification("${font.family} has been installed");
                   },

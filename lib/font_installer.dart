@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
-void installFonts(Map<String, dynamic> fontUrls, String family) async {
+Future<void> installFonts(Map<String, dynamic> fontUrls, String family) async {
   const platform = MethodChannel('font_installer.fontset.dev/install_font');
 
   Future<void> installFont(String fontPath) async {

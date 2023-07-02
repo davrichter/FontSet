@@ -6,10 +6,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 void sendNotification(String message) {
   if (Platform.isWindows) {
     WinToast.instance().initialize(
-      aumId: 'one.mixin.FontSet',
+      aumId: '21738DavidRichter.FontSet',
       displayName: 'FontSet',
       iconPath: '',
-      clsid: 'your-notification-activator-guid-2EB1AE5198B7',
+      clsid: 'A2232234-1234-1234-1234-123412341234',
     );
 
     var xml = """
