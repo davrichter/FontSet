@@ -10,7 +10,7 @@ Future<void> installFonts(Map<String, dynamic> fontUrls, String family) async {
       int numberOfFontsInstalled =
       await platform.invokeMethod('installFont', {"fontPath": fontPath});
 
-      // The windows function returns 0 if the installing failed
+      // The windows function returns 0 if the installation failed
       if (numberOfFontsInstalled == 0) {
         throw Exception("Installing font failed. 0 fonts were installed");
       }
